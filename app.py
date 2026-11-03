@@ -1,37 +1,85 @@
-
 import streamlit as st
 import pandas as pd
+import folium
+
+from streamlit_folium import st_folium
 
 # ==========================================
 # PAGE CONFIGURATION
 # ==========================================
 
 st.set_page_config(
-    page_title="ResQ AI | Disaster Management",
+    page_title="ResQ AI | Monitoring System",
     page_icon="R",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
 # ==========================================
-# PROFESSIONAL THEME
+# SAMPLE MONITORING DATA
+# ==========================================
+
+locations = pd.DataFrame([
+    {
+        "Location": "Gomti River Area",
+        "Latitude": 26.8560,
+        "Longitude": 80.9462,
+        "Rainfall": 185,
+        "Water Level": 9.2,
+        "Risk": "HIGH"
+    },
+    {
+        "Location": "Alambagh",
+        "Latitude": 26.8137,
+        "Longitude": 80.9020,
+        "Rainfall": 120,
+        "Water Level": 7.8,
+        "Risk": "MEDIUM"
+    },
+    {
+        "Location": "Hazratganj",
+        "Latitude": 26.8500,
+        "Longitude": 80.9460,
+        "Rainfall": 65,
+        "Water Level": 5.1,
+        "Risk": "LOW"
+    },
+    {
+        "Location": "Lucknow Central",
+        "Latitude": 26.8467,
+        "Longitude": 80.9366,
+        "Rainfall": 95,
+        "Water Level": 6.2,
+        "Risk": "MEDIUM"
+    }
+])
+
+# All coordinates and readings above are illustrative.
+# They are not verified monitoring stations or measurements.
+
+RISK_COLORS = {
+    "LOW": "#36B37E",
+    "MEDIUM": "#E5AA45",
+    "HIGH": "#E46B70"
+}
+
+# ==========================================
+# PROFESSIONAL DARK THEME
 # ==========================================
 
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url(
+'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'
+);
 
 :root {
     --background: #101820;
     --panel: #192530;
-    --panel-light: #202F3B;
     --border: #344451;
     --text: #E8EDF2;
     --muted: #9BAAB7;
     --blue: #4B9FE1;
-    --green: #36B37E;
-    --amber: #E5AA45;
-    --red: #E46B70;
 }
 
 html, body, [class*="css"] {
@@ -53,34 +101,8 @@ html, body, [class*="css"] {
     border-right: 1px solid var(--border);
 }
 
-[data-testid="stSidebar"] h1 {
-    font-size: 23px;
-    font-weight: 700;
-}
-
 h1, h2, h3 {
     color: var(--text);
-    letter-spacing: -0.5px;
-}
-
-h1 {
-    font-weight: 700;
-}
-
-p {
-    color: var(--muted);
-}
-
-hr {
-    border-color: var(--border);
-}
-
-.header-label {
-    color: var(--blue);
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
 }
 
 .page-header {
@@ -90,35 +112,50 @@ hr {
 }
 
 .page-header h1 {
-    font-size: 30px;
+    font-size: 29px;
+    font-weight: 700;
     margin: 8px 0;
 }
 
 .page-header p {
+    color: var(--muted);
     font-size: 14px;
-    margin: 0;
+}
+
+.eyebrow {
+    color: var(--blue);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+}
+
+.section-heading {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 28px 0 15px 0;
 }
 
 .metric-card {
     background: var(--panel);
     border: 1px solid var(--border);
     border-radius: 7px;
-    padding: 19px;
-    min-height: 112px;
+    padding: 18px;
+    min-height: 105px;
     margin-bottom: 12px;
 }
 
 .metric-label {
     color: var(--muted);
-    font-size: 13px;
-    font-weight: 500;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .4px;
 }
 
 .metric-value {
     color: var(--text);
-    font-size: 30px;
+    font-size: 29px;
     font-weight: 700;
-    margin-top: 9px;
+    margin-top: 8px;
 }
 
 .metric-note {
@@ -127,24 +164,17 @@ hr {
     margin-top: 4px;
 }
 
-.section-heading {
-    font-size: 18px;
-    font-weight: 600;
-    margin-top: 28px;
-    margin-bottom: 15px;
-}
-
 .panel {
     background: var(--panel);
     border: 1px solid var(--border);
     border-radius: 7px;
-    padding: 20px;
-    margin-bottom: 15px;
+    padding: 18px;
+    margin-bottom: 14px;
 }
 
 .status {
     display: inline-block;
-    font-size: 22px;
+    font-size: 23px;
     font-weight: 800;
     letter-spacing: 1px;
     padding: 10px 17px;
@@ -170,14 +200,6 @@ hr {
     border: 1px solid #82434A;
 }
 
-.small-label {
-    color: var(--muted);
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-}
-
 div.stButton > button {
     background: #276DA6;
     color: white;
@@ -189,48 +211,31 @@ div.stButton > button {
 div.stButton > button:hover {
     background: #3586C3;
     color: white;
-    border-color: #4B9FE1;
 }
 
-div[data-testid="stMetric"] {
-    background: var(--panel);
-    padding: 15px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-}
-
-[data-testid="stMetricLabel"] {
-    color: var(--muted);
-}
-
-[data-testid="stMetricValue"] {
-    color: var(--text);
-}
-
-.stSelectbox, .stSlider {
-    margin-bottom: 12px;
+hr {
+    border-color: var(--border);
 }
 
 footer {
     visibility: hidden;
 }
 
-@media (max-width: 640px) {
+@media(max-width: 640px) {
     .block-container {
         padding: 1rem 1rem 2rem 1rem;
     }
 
     .page-header h1 {
-        font-size: 25px;
+        font-size: 24px;
     }
 
     .metric-card {
-        padding: 14px;
-        min-height: 100px;
+        padding: 13px;
     }
 
     .metric-value {
-        font-size: 25px;
+        font-size: 24px;
     }
 
     .status {
@@ -242,13 +247,13 @@ footer {
 
 
 # ==========================================
-# REUSABLE COMPONENTS
+# REUSABLE FUNCTIONS
 # ==========================================
 
 def page_header(title, subtitle, section):
     st.markdown(f"""
     <div class="page-header">
-        <div class="header-label">{section}</div>
+        <div class="eyebrow">{section}</div>
         <h1>{title}</h1>
         <p>{subtitle}</p>
     </div>
@@ -266,13 +271,62 @@ def metric_card(label, value, note):
 
 
 def risk_badge(level):
-    css_class = {
+    css = {
         "LOW": "low",
         "MEDIUM": "medium",
         "HIGH": "high"
-    }[level]
+    }
+    return (
+        f'<span class="status {css[level]}">'
+        f'{level} RISK</span>'
+    )
 
-    return f'<span class="status {css_class}">{level} RISK</span>'
+
+def create_map(data):
+    """Build an interactive demonstration monitoring map."""
+
+    m = folium.Map(
+        location=[26.8467, 80.9366],
+        zoom_start=12,
+        tiles="CartoDB dark_matter",
+        control_scale=True
+    )
+
+    for _, row in data.iterrows():
+
+        color = RISK_COLORS[row["Risk"]]
+
+        popup_html = f"""
+        <div style="width:190px;font-family:Arial;color:#202830">
+            <h4>{row['Location']}</h4>
+            <b>Risk:</b> {row['Risk']}<br>
+            <b>Rainfall:</b> {row['Rainfall']} mm<br>
+            <b>Water level:</b> {row['Water Level']} m
+            <p style="font-size:11px">
+                Demonstration data only
+            </p>
+        </div>
+        """
+
+        folium.CircleMarker(
+            location=[
+                row["Latitude"],
+                row["Longitude"]
+            ],
+            radius=11,
+            color=color,
+            weight=2,
+            fill=True,
+            fill_color=color,
+            fill_opacity=0.85,
+            tooltip=row["Location"],
+            popup=folium.Popup(
+                popup_html,
+                max_width=240
+            )
+        ).add_to(m)
+
+    return m
 
 
 # ==========================================
@@ -299,7 +353,7 @@ with st.sidebar:
     st.divider()
 
     st.markdown("**SYSTEM INFORMATION**")
-    st.caption("Version 2.0")
+    st.caption("Version 3.0")
     st.caption("Student project prototype")
     st.caption("Data mode: Demonstration")
 
@@ -312,15 +366,25 @@ if page == "Dashboard":
 
     page_header(
         "Disaster Monitoring Dashboard",
-        "Overview of sample environmental indicators and risk information.",
+        "Location-based overview of sample environmental indicators.",
         "RESQ AI / OVERVIEW"
     )
 
-    # Key indicators
+    # KPI CARDS
 
     st.markdown(
         '<div class="section-heading">Key Indicators</div>',
         unsafe_allow_html=True
+    )
+
+    high_count = int(
+        (locations["Risk"] == "HIGH").sum()
+    )
+    medium_count = int(
+        (locations["Risk"] == "MEDIUM").sum()
+    )
+    low_count = int(
+        (locations["Risk"] == "LOW").sum()
     )
 
     c1, c2 = st.columns(2)
@@ -328,123 +392,149 @@ if page == "Dashboard":
     with c1:
         metric_card(
             "MONITORED AREAS",
-            "04",
+            str(len(locations)).zfill(2),
             "Sample locations"
         )
 
     with c2:
         metric_card(
-            "ACTIVE ALERTS",
-            "02",
-            "Simulated notifications"
+            "HIGH-RISK AREAS",
+            str(high_count).zfill(2),
+            "Illustrative classification"
         )
 
     c3, c4 = st.columns(2)
 
     with c3:
         metric_card(
-            "SAFE SHELTERS",
-            "12",
-            "Sample shelter records"
+            "MEDIUM-RISK AREAS",
+            str(medium_count).zfill(2),
+            "Illustrative classification"
         )
 
     with c4:
         metric_card(
-            "DATA STATUS",
-            "DEMO",
-            "Illustrative information"
+            "LOW-RISK AREAS",
+            str(low_count).zfill(2),
+            "Illustrative classification"
         )
 
-    # Environmental snapshot
+    # INTERACTIVE MAP
 
     st.markdown(
-        '<div class="section-heading">Environmental Indicators</div>',
+        '<div class="section-heading">Geographic Risk Monitoring</div>',
         unsafe_allow_html=True
     )
 
-    c1, c2 = st.columns(2)
+    st.caption(
+        "Select a risk category to filter the map. "
+        "Tap a marker to inspect its sample readings."
+    )
 
-    with c1:
-        metric_card(
-            "RAINFALL",
-            "120 mm",
-            "Illustrative reading"
+    risk_filter = st.multiselect(
+        "Display risk categories",
+        ["LOW", "MEDIUM", "HIGH"],
+        default=["LOW", "MEDIUM", "HIGH"]
+    )
+
+    filtered_locations = locations[
+        locations["Risk"].isin(risk_filter)
+    ]
+
+    map_object = create_map(filtered_locations)
+
+    st_folium(
+        map_object,
+        height=430,
+        width=None,
+        use_container_width=True,
+        returned_objects=[]
+    )
+
+    # MAP LEGEND
+
+    l1, l2, l3 = st.columns(3)
+
+    with l1:
+        st.markdown(
+            '<span style="color:#36B37E">● LOW</span>',
+            unsafe_allow_html=True
         )
 
-    with c2:
-        metric_card(
-            "WATER LEVEL",
-            "8.2 m",
-            "Illustrative reading"
+    with l2:
+        st.markdown(
+            '<span style="color:#E5AA45">● MEDIUM</span>',
+            unsafe_allow_html=True
         )
 
-    # Graphs
+    with l3:
+        st.markdown(
+            '<span style="color:#E46B70">● HIGH</span>',
+            unsafe_allow_html=True
+        )
+
+    st.caption(
+        "Map locations and risk readings are illustrative. "
+        "They are not verified flood-risk zones or monitoring stations."
+    )
+
+    # ENVIRONMENTAL CHARTS
 
     st.markdown(
-        '<div class="section-heading">Rainfall Analysis</div>',
+        '<div class="section-heading">Environmental Analytics</div>',
         unsafe_allow_html=True
     )
 
-    rainfall_df = pd.DataFrame({
-        "Rainfall (mm)": [65, 90, 120, 155, 110, 180]
-    }, index=[
-        "Period 1",
-        "Period 2",
-        "Period 3",
-        "Period 4",
-        "Period 5",
-        "Period 6"
-    ])
+    chart_col1, chart_col2 = st.columns(2)
 
-    st.bar_chart(
-        rainfall_df,
-        height=270,
-        color="#4B9FE1"
-    )
+    with chart_col1:
 
-    st.caption("Illustrative rainfall values across six periods.")
+        st.markdown("**Rainfall by Location**")
 
-    st.markdown(
-        '<div class="section-heading">Water Level Trend</div>',
-        unsafe_allow_html=True
-    )
+        rainfall_df = locations.set_index("Location")[
+            ["Rainfall"]
+        ]
 
-    water_df = pd.DataFrame({
-        "Water level (m)": [4.2, 5.1, 5.8, 6.4, 7.2, 8.2]
-    }, index=[
-        "Period 1",
-        "Period 2",
-        "Period 3",
-        "Period 4",
-        "Period 5",
-        "Period 6"
-    ])
+        st.bar_chart(
+            rainfall_df,
+            color="#4B9FE1",
+            height=260
+        )
 
-    st.line_chart(
-        water_df,
-        height=270,
-        color="#36B37E"
-    )
+    with chart_col2:
 
-    st.caption("Illustrative water-level trend.")
+        st.markdown("**Water Level by Location**")
 
-    # Pie chart
+        water_df = locations.set_index("Location")[
+            ["Water Level"]
+        ]
+
+        st.bar_chart(
+            water_df,
+            color="#36B37E",
+            height=260
+        )
+
+    # PIE CHART
 
     st.markdown(
         '<div class="section-heading">Risk Distribution</div>',
         unsafe_allow_html=True
     )
 
-    risk_data = pd.DataFrame({
-        "Risk Category": ["Low Risk", "Medium Risk", "High Risk"],
-        "Areas": [5, 3, 2]
+    pie_data = pd.DataFrame({
+        "Risk": ["LOW", "MEDIUM", "HIGH"],
+        "Areas": [
+            low_count,
+            medium_count,
+            high_count
+        ]
     })
 
     pie_spec = {
         "mark": {
             "type": "arc",
-            "innerRadius": 45,
-            "outerRadius": 115,
+            "innerRadius": 55,
             "stroke": "#192530"
         },
         "encoding": {
@@ -453,14 +543,10 @@ if page == "Dashboard":
                 "type": "quantitative"
             },
             "color": {
-                "field": "Risk Category",
+                "field": "Risk",
                 "type": "nominal",
                 "scale": {
-                    "domain": [
-                        "Low Risk",
-                        "Medium Risk",
-                        "High Risk"
-                    ],
+                    "domain": ["LOW", "MEDIUM", "HIGH"],
                     "range": [
                         "#36B37E",
                         "#E5AA45",
@@ -468,34 +554,48 @@ if page == "Dashboard":
                     ]
                 },
                 "legend": {
-                    "title": "Risk level",
+                    "title": "Risk category",
                     "labelColor": "#E8EDF2",
                     "titleColor": "#E8EDF2"
                 }
             },
             "tooltip": [
-                {"field": "Risk Category"},
-                {"field": "Areas", "type": "quantitative"}
+                {"field": "Risk"},
+                {"field": "Areas"}
             ]
-        },
-        "view": {
-            "stroke": None
         }
     }
 
     st.vega_lite_chart(
-        risk_data,
+        pie_data,
         pie_spec,
         use_container_width=True
     )
 
-    st.caption(
-        "Illustrative distribution across ten sample areas."
+    # LOCATION TABLE
+
+    st.markdown(
+        '<div class="section-heading">Location Register</div>',
+        unsafe_allow_html=True
+    )
+
+    st.dataframe(
+        locations[
+            [
+                "Location",
+                "Rainfall",
+                "Water Level",
+                "Risk"
+            ]
+        ],
+        use_container_width=True,
+        hide_index=True
     )
 
     st.info(
-        "Demonstration data only. No live sensors, "
-        "verified shelter records or official alerts are connected."
+        "All dashboard figures are sample data. "
+        "The system is not connected to live sensors, "
+        "official alerts or verified shelter databases."
     )
 
 
@@ -511,19 +611,9 @@ elif page == "Risk Assessment":
         "RESQ AI / ASSESSMENT"
     )
 
-    st.markdown(
-        '<div class="section-heading">Monitoring Parameters</div>',
-        unsafe_allow_html=True
-    )
-
-    location = st.selectbox(
+    location_name = st.selectbox(
         "Monitoring location",
-        [
-            "Gomti River Area",
-            "Alambagh",
-            "Hazratganj",
-            "Lucknow"
-        ]
+        locations["Location"].tolist()
     )
 
     rainfall = st.slider(
@@ -541,26 +631,24 @@ elif page == "Risk Assessment":
         0.1
     )
 
-    # Demo classification
-
     if rainfall >= 200 or water >= 10:
         risk = "HIGH"
         explanation = (
-            "The selected readings exceed the demonstration "
+            "The sample readings cross the demonstration "
             "high-risk thresholds."
         )
 
     elif rainfall >= 100 or water >= 7:
         risk = "MEDIUM"
         explanation = (
-            "The selected readings fall within the "
+            "The sample readings fall within the "
             "demonstration medium-risk range."
         )
 
     else:
         risk = "LOW"
         explanation = (
-            "The selected readings fall within the "
+            "The sample readings fall within the "
             "demonstration low-risk range."
         )
 
@@ -571,18 +659,13 @@ elif page == "Risk Assessment":
 
     st.markdown(f"""
     <div class="panel">
-        <div class="small-label">MONITORING LOCATION</div>
-        <h2>{location}</h2>
-        <div class="small-label">DEMO CLASSIFICATION</div>
+        <div class="metric-label">MONITORING LOCATION</div>
+        <h2>{location_name}</h2>
+        <div class="metric-label">DEMO CLASSIFICATION</div>
         {risk_badge(risk)}
         <p>{explanation}</p>
     </div>
     """, unsafe_allow_html=True)
-
-    st.markdown(
-        '<div class="section-heading">Measurement Summary</div>',
-        unsafe_allow_html=True
-    )
 
     c1, c2 = st.columns(2)
 
@@ -601,7 +684,7 @@ elif page == "Risk Assessment":
         )
 
     st.caption(
-        "This is a basic rule-based demonstration, "
+        "This is a rule-based demonstration, "
         "not a validated flood prediction model."
     )
 
@@ -637,7 +720,7 @@ elif page == "Emergency Alerts":
 
         st.markdown(f"""
         <div class="panel">
-            <div class="small-label">DEMONSTRATION ALERT</div>
+            <div class="metric-label">DEMONSTRATION ALERT</div>
             {risk_badge(alert["level"])}
             <h3>{alert["title"]}</h3>
             <p>{alert["message"]}</p>
@@ -646,8 +729,8 @@ elif page == "Emergency Alerts":
         """, unsafe_allow_html=True)
 
     st.warning(
-        "These notifications are simulated. "
-        "They are not official emergency warnings."
+        "These are simulated notifications, "
+        "not official emergency warnings."
     )
 
 
@@ -668,20 +751,37 @@ elif page == "About":
     st.write(
         "ResQ AI is a student project prototype that "
         "demonstrates how a digital disaster-management "
-        "dashboard can organise environmental indicators, "
-        "risk classifications and example emergency alerts."
+        "platform can organise environmental indicators, "
+        "risk classifications and geographic information."
     )
 
     st.markdown("### System Modules")
 
     modules = [
-        ("Dashboard", "Environmental indicators and data visualisations."),
-        ("Risk Assessment", "Rule-based classification of sample readings."),
-        ("Emergency Alerts", "Illustrative notifications by location."),
-        ("Analytics", "Rainfall, water-level and risk distribution charts.")
+        (
+            "Monitoring Dashboard",
+            "Overview of sample environmental indicators."
+        ),
+        (
+            "Interactive Risk Map",
+            "Geographic display of illustrative risk categories."
+        ),
+        (
+            "Risk Assessment",
+            "Rule-based classification of sample readings."
+        ),
+        (
+            "Emergency Alerts",
+            "Illustrative notifications by location."
+        ),
+        (
+            "Analytics",
+            "Rainfall, water-level and risk distribution charts."
+        )
     ]
 
     for title, description in modules:
+
         st.markdown(f"""
         <div class="panel">
             <b>{title}</b>
@@ -691,12 +791,14 @@ elif page == "About":
 
     st.markdown("### Technology Stack")
 
-    st.write("Python | Streamlit | Pandas | Vega-Lite")
+    st.write(
+        "Python | Streamlit | Pandas | Folium | OpenStreetMap"
+    )
 
     st.info(
-        "The current version uses static demonstration data. "
-        "It is not connected to live monitoring infrastructure "
-        "or emergency response services."
+        "The current application uses demonstration data. "
+        "It does not connect to live sensors, official emergency "
+        "services or verified geographic risk datasets."
     )
 
 
@@ -707,5 +809,5 @@ elif page == "About":
 st.divider()
 
 st.caption(
-    "ResQ AI | Disaster Management Prototype | Version 2.0"
+    "ResQ AI | Disaster Management Prototype | Version 3.0"
 )
