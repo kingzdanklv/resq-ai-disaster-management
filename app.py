@@ -1,169 +1,218 @@
 
 import streamlit as st
+import pandas as pd
+
+# ==========================================
+# PAGE CONFIGURATION
+# ==========================================
 
 st.set_page_config(
-    page_title="ResQ AI | Disaster Response",
-    page_icon="🌊",
-    layout="wide"
+    page_title="ResQ AI | Disaster Management",
+    page_icon="R",
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-# ==============================
-# CUSTOM DESIGN
-# ==============================
+# ==========================================
+# PROFESSIONAL THEME
+# ==========================================
 
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+    --background: #101820;
+    --panel: #192530;
+    --panel-light: #202F3B;
+    --border: #344451;
+    --text: #E8EDF2;
+    --muted: #9BAAB7;
+    --blue: #4B9FE1;
+    --green: #36B37E;
+    --amber: #E5AA45;
+    --red: #E46B70;
+}
 
 html, body, [class*="css"] {
     font-family: 'Inter', sans-serif;
 }
 
 .stApp {
-    background: #071426;
-    color: #F1F5F9;
+    background: var(--background);
+    color: var(--text);
 }
 
 .block-container {
-    max-width: 1150px;
-    padding-top: 2rem;
-    padding-bottom: 3rem;
+    max-width: 1400px;
+    padding: 2rem 2rem 3rem 2rem;
 }
 
 [data-testid="stSidebar"] {
-    background: #0D1D33;
-    border-right: 1px solid #243B58;
+    background: #151F29;
+    border-right: 1px solid var(--border);
 }
 
-.hero {
-    background: linear-gradient(120deg, #102B4C, #124C70);
-    border: 1px solid #285579;
-    border-radius: 20px;
-    padding: 28px;
-    margin: 12px 0 26px 0;
+[data-testid="stSidebar"] h1 {
+    font-size: 23px;
+    font-weight: 700;
 }
 
-.hero h1 {
-    font-size: clamp(30px, 5vw, 46px);
-    color: white;
+h1, h2, h3 {
+    color: var(--text);
+    letter-spacing: -0.5px;
+}
+
+h1 {
+    font-weight: 700;
+}
+
+p {
+    color: var(--muted);
+}
+
+hr {
+    border-color: var(--border);
+}
+
+.header-label {
+    color: var(--blue);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+}
+
+.page-header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 20px;
+    margin-bottom: 25px;
+}
+
+.page-header h1 {
+    font-size: 30px;
     margin: 8px 0;
 }
 
-.hero p {
-    color: #C5D8EA;
-    font-size: 16px;
-    margin-bottom: 0;
-}
-
-.eyebrow {
-    color: #63D6E8;
-    font-weight: 700;
-    letter-spacing: 2px;
-    font-size: 12px;
+.page-header p {
+    font-size: 14px;
+    margin: 0;
 }
 
 .metric-card {
-    background: #142A43;
-    border: 1px solid #2B4563;
-    border-radius: 16px;
-    padding: 20px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 19px;
+    min-height: 112px;
     margin-bottom: 12px;
 }
 
 .metric-label {
-    color: #B8C9DB;
-    font-size: 14px;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 500;
 }
 
 .metric-value {
-    font-size: 32px;
-    font-weight: 800;
-    color: white;
-    margin-top: 8px;
+    color: var(--text);
+    font-size: 30px;
+    font-weight: 700;
+    margin-top: 9px;
 }
 
 .metric-note {
-    color: #8DA9C3;
-    font-size: 12px;
-    margin-top: 5px;
+    color: var(--muted);
+    font-size: 11px;
+    margin-top: 4px;
 }
 
-.section-title {
-    font-size: 24px;
-    font-weight: 800;
-    margin: 28px 0 15px 0;
+.section-heading {
+    font-size: 18px;
+    font-weight: 600;
+    margin-top: 28px;
+    margin-bottom: 15px;
 }
 
-.info-card {
-    background: #10243A;
-    border: 1px solid #29435E;
-    border-radius: 16px;
+.panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 7px;
     padding: 20px;
-    margin: 12px 0;
-}
-
-.info-card p {
-    color: #B8C9DB;
+    margin-bottom: 15px;
 }
 
 .status {
     display: inline-block;
-    padding: 12px 22px;
-    border-radius: 30px;
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 800;
     letter-spacing: 1px;
+    padding: 10px 17px;
+    border-radius: 5px;
     margin: 10px 0;
 }
 
-.safe {
-    background: #123D35;
-    color: #70E0B4;
-    border: 1px solid #23866A;
+.low {
+    color: #54D6A0;
+    background: #183A30;
+    border: 1px solid #28684F;
 }
 
-.warning {
-    background: #493817;
-    color: #FFD477;
-    border: 1px solid #A77B23;
+.medium {
+    color: #F3C46A;
+    background: #3D321E;
+    border: 1px solid #79602D;
 }
 
-.danger {
-    background: #4B202B;
-    color: #FF9BA8;
-    border: 1px solid #B74358;
+.high {
+    color: #FF8B91;
+    background: #40262B;
+    border: 1px solid #82434A;
 }
 
-.risk-result {
-    background: #10243A;
-    border: 2px solid #385673;
-    border-radius: 18px;
-    padding: 24px;
-    margin: 15px 0;
-}
-
-.risk-result h2 {
-    font-size: 30px;
-    color: white;
-}
-
-.risk-result .status {
-    font-size: 30px;
-    padding: 14px 28px;
+.small-label {
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
 }
 
 div.stButton > button {
-    background: #1687D9;
+    background: #276DA6;
     color: white;
-    border: 0;
-    border-radius: 10px;
-    font-weight: 700;
-    min-height: 44px;
+    border: 1px solid #3989C8;
+    border-radius: 5px;
+    font-weight: 600;
 }
 
 div.stButton > button:hover {
-    background: #0872BE;
+    background: #3586C3;
     color: white;
+    border-color: #4B9FE1;
+}
+
+div[data-testid="stMetric"] {
+    background: var(--panel);
+    padding: 15px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+}
+
+[data-testid="stMetricLabel"] {
+    color: var(--muted);
+}
+
+[data-testid="stMetricValue"] {
+    color: var(--text);
+}
+
+.stSelectbox, .stSlider {
+    margin-bottom: 12px;
+}
+
+footer {
+    visibility: hidden;
 }
 
 @media (max-width: 640px) {
@@ -171,34 +220,40 @@ div.stButton > button:hover {
         padding: 1rem 1rem 2rem 1rem;
     }
 
-    .hero {
-        padding: 21px;
-        border-radius: 15px;
+    .page-header h1 {
+        font-size: 25px;
     }
 
     .metric-card {
-        padding: 16px;
+        padding: 14px;
+        min-height: 100px;
+    }
+
+    .metric-value {
+        font-size: 25px;
     }
 
     .status {
-        font-size: 21px;
+        font-size: 19px;
     }
-
-    .risk-result .status {
-        font-size: 25px;
-    }
-}
-
-footer {
-    visibility: hidden;
 }
 </style>
 """, unsafe_allow_html=True)
 
 
-# ==============================
-# REUSABLE FUNCTIONS
-# ==============================
+# ==========================================
+# REUSABLE COMPONENTS
+# ==========================================
+
+def page_header(title, subtitle, section):
+    st.markdown(f"""
+    <div class="page-header">
+        <div class="header-label">{section}</div>
+        <h1>{title}</h1>
+        <p>{subtitle}</p>
+    </div>
+    """, unsafe_allow_html=True)
+
 
 def metric_card(label, value, note):
     st.markdown(f"""
@@ -210,69 +265,61 @@ def metric_card(label, value, note):
     """, unsafe_allow_html=True)
 
 
-def status_badge(level):
-    styles = {
-        "LOW": "safe",
-        "MEDIUM": "warning",
-        "HIGH": "danger"
-    }
+def risk_badge(level):
+    css_class = {
+        "LOW": "low",
+        "MEDIUM": "medium",
+        "HIGH": "high"
+    }[level]
 
-    return (
-        f'<span class="status {styles[level]}">'
-        f'{level} RISK</span>'
-    )
+    return f'<span class="status {css_class}">{level} RISK</span>'
 
 
-def hero(title, subtitle, eyebrow):
-    st.markdown(f"""
-    <div class="hero">
-        <div class="eyebrow">{eyebrow}</div>
-        <h1>{title}</h1>
-        <p>{subtitle}</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-
-# ==============================
-# SIDEBAR NAVIGATION
-# ==============================
+# ==========================================
+# SIDEBAR
+# ==========================================
 
 with st.sidebar:
-    st.markdown("## 🌊 ResQ AI")
-    st.caption("DISASTER RESPONSE PLATFORM")
+
+    st.markdown("# ResQ AI")
+    st.caption("DISASTER MANAGEMENT SYSTEM")
 
     st.divider()
 
     page = st.radio(
-        "NAVIGATION",
+        "MAIN MENU",
         [
-            "🏠 Dashboard",
-            "📊 Risk Assessment",
-            "🚨 Emergency Alerts",
-            "ℹ️ About"
+            "Dashboard",
+            "Risk Assessment",
+            "Emergency Alerts",
+            "About"
         ]
     )
 
     st.divider()
 
-    st.caption("PROTOTYPE VERSION 2.0")
-    st.caption("Built for smarter disaster response.")
+    st.markdown("**SYSTEM INFORMATION**")
+    st.caption("Version 2.0")
+    st.caption("Student project prototype")
+    st.caption("Data mode: Demonstration")
 
 
-# ==============================
+# ==========================================
 # DASHBOARD
-# ==============================
+# ==========================================
 
-if page == "🏠 Dashboard":
+if page == "Dashboard":
 
-    hero(
-        "🌊 ResQ AI Dashboard",
-        "Monitor risks. Understand threats. Support faster response.",
-        "AI-POWERED DISASTER MANAGEMENT"
+    page_header(
+        "Disaster Monitoring Dashboard",
+        "Overview of sample environmental indicators and risk information.",
+        "RESQ AI / OVERVIEW"
     )
 
+    # Key indicators
+
     st.markdown(
-        '<div class="section-title">📌 Disaster Overview</div>',
+        '<div class="section-heading">Key Indicators</div>',
         unsafe_allow_html=True
     )
 
@@ -280,115 +327,133 @@ if page == "🏠 Dashboard":
 
     with c1:
         metric_card(
-            "Risk Areas",
+            "MONITORED AREAS",
             "04",
-            "Sample monitored locations"
+            "Sample locations"
         )
 
     with c2:
         metric_card(
-            "Active Alerts",
+            "ACTIVE ALERTS",
             "02",
-            "Demo alert records"
+            "Simulated notifications"
         )
 
     c3, c4 = st.columns(2)
 
     with c3:
         metric_card(
-            "Safe Shelters",
+            "SAFE SHELTERS",
             "12",
-            "Sample shelter count"
+            "Sample shelter records"
         )
 
     with c4:
         metric_card(
-            "Monitoring Status",
+            "DATA STATUS",
             "DEMO",
-            "Illustrative dashboard data"
+            "Illustrative information"
         )
 
     # Environmental snapshot
 
     st.markdown(
-        '<div class="section-title">🌦️ Environmental Snapshot</div>',
+        '<div class="section-heading">Environmental Indicators</div>',
         unsafe_allow_html=True
     )
 
     c1, c2 = st.columns(2)
 
     with c1:
-        st.markdown("""
-        <div class="info-card">
-            <div class="metric-label">🌧️ Sample Rainfall</div>
-            <div class="metric-value">120 mm</div>
-            <p>Illustrative measurement</p>
-        </div>
-        """, unsafe_allow_html=True)
+        metric_card(
+            "RAINFALL",
+            "120 mm",
+            "Illustrative reading"
+        )
 
     with c2:
-        st.markdown("""
-        <div class="info-card">
-            <div class="metric-label">🌊 Sample Water Level</div>
-            <div class="metric-value">8.2 m</div>
-            <p>Illustrative measurement</p>
-        </div>
-        """, unsafe_allow_html=True)
+        metric_card(
+            "WATER LEVEL",
+            "8.2 m",
+            "Illustrative reading"
+        )
 
-    # Analytics
+    # Graphs
 
     st.markdown(
-        '<div class="section-title">📊 Disaster Analytics</div>',
+        '<div class="section-heading">Rainfall Analysis</div>',
         unsafe_allow_html=True
     )
 
-    st.markdown("### 🌧️ Rainfall Comparison")
-
-    rainfall_data = {
+    rainfall_df = pd.DataFrame({
         "Rainfall (mm)": [65, 90, 120, 155, 110, 180]
-    }
+    }, index=[
+        "Period 1",
+        "Period 2",
+        "Period 3",
+        "Period 4",
+        "Period 5",
+        "Period 6"
+    ])
 
     st.bar_chart(
-        rainfall_data,
-        height=280
+        rainfall_df,
+        height=270,
+        color="#4B9FE1"
     )
 
-    st.caption("Sample rainfall readings across six demo periods.")
+    st.caption("Illustrative rainfall values across six periods.")
 
-    st.markdown("### 🌊 Water Level Trend")
+    st.markdown(
+        '<div class="section-heading">Water Level Trend</div>',
+        unsafe_allow_html=True
+    )
 
-    water_data = {
-        "Water Level (m)": [4.2, 5.1, 5.8, 6.4, 7.2, 8.2]
-    }
+    water_df = pd.DataFrame({
+        "Water level (m)": [4.2, 5.1, 5.8, 6.4, 7.2, 8.2]
+    }, index=[
+        "Period 1",
+        "Period 2",
+        "Period 3",
+        "Period 4",
+        "Period 5",
+        "Period 6"
+    ])
 
     st.line_chart(
-        water_data,
-        height=280
+        water_df,
+        height=270,
+        color="#36B37E"
     )
 
     st.caption("Illustrative water-level trend.")
 
-    st.markdown("### 🎯 Risk Distribution")
+    # Pie chart
 
-    risk_data = [
-        {"risk": "Low Risk", "areas": 5},
-        {"risk": "Medium Risk", "areas": 3},
-        {"risk": "High Risk", "areas": 2}
-    ]
+    st.markdown(
+        '<div class="section-heading">Risk Distribution</div>',
+        unsafe_allow_html=True
+    )
 
-    pie_chart = {
+    risk_data = pd.DataFrame({
+        "Risk Category": ["Low Risk", "Medium Risk", "High Risk"],
+        "Areas": [5, 3, 2]
+    })
+
+    pie_spec = {
         "mark": {
             "type": "arc",
-            "innerRadius": 55,
-            "stroke": "#071426"
+            "innerRadius": 45,
+            "outerRadius": 115,
+            "stroke": "#192530"
         },
         "encoding": {
             "theta": {
-                "field": "areas",
+                "field": "Areas",
                 "type": "quantitative"
             },
             "color": {
-                "field": "risk",
+                "field": "Risk Category",
                 "type": "nominal",
                 "scale": {
                     "domain": [
@@ -397,55 +462,62 @@ if page == "🏠 Dashboard":
                         "High Risk"
                     ],
                     "range": [
-                        "#22C55E",
-                        "#FACC15",
-                        "#EF4444"
+                        "#36B37E",
+                        "#E5AA45",
+                        "#E46B70"
                     ]
                 },
                 "legend": {
-                    "title": "Risk Category",
-                    "labelColor": "#FFFFFF",
-                    "titleColor": "#FFFFFF"
+                    "title": "Risk level",
+                    "labelColor": "#E8EDF2",
+                    "titleColor": "#E8EDF2"
                 }
             },
             "tooltip": [
-                {"field": "risk", "type": "nominal"},
-                {"field": "areas", "type": "quantitative"}
+                {"field": "Risk Category"},
+                {"field": "Areas", "type": "quantitative"}
             ]
+        },
+        "view": {
+            "stroke": None
         }
     }
 
     st.vega_lite_chart(
         risk_data,
-        pie_chart,
+        pie_spec,
         use_container_width=True
     )
 
     st.caption(
-        "Demo distribution: 5 low-risk, 3 medium-risk "
-        "and 2 high-risk sample areas."
+        "Illustrative distribution across ten sample areas."
     )
 
     st.info(
-        "All dashboard figures and charts use sample data. "
-        "They are not live sensor readings or official warnings."
+        "Demonstration data only. No live sensors, "
+        "verified shelter records or official alerts are connected."
     )
 
 
-# ==============================
+# ==========================================
 # RISK ASSESSMENT
-# ==============================
+# ==========================================
 
-elif page == "📊 Risk Assessment":
+elif page == "Risk Assessment":
 
-    hero(
-        "📊 Risk Assessment",
-        "Explore how sample rainfall and water levels affect a demo risk category.",
-        "PREDICTIVE RISK MODULE"
+    page_header(
+        "Risk Assessment",
+        "Evaluate sample rainfall and water-level readings.",
+        "RESQ AI / ASSESSMENT"
+    )
+
+    st.markdown(
+        '<div class="section-heading">Monitoring Parameters</div>',
+        unsafe_allow_html=True
     )
 
     location = st.selectbox(
-        "📍 Select monitoring area",
+        "Monitoring location",
         [
             "Gomti River Area",
             "Alambagh",
@@ -455,179 +527,185 @@ elif page == "📊 Risk Assessment":
     )
 
     rainfall = st.slider(
-        "🌧️ Rainfall (mm)",
+        "Rainfall (mm)",
         0,
         300,
         120
     )
 
     water = st.slider(
-        "🌊 Water level (metres)",
+        "Water level (metres)",
         0.0,
         15.0,
         8.2,
         0.1
     )
 
-    # Demo risk calculation
+    # Demo classification
 
     if rainfall >= 200 or water >= 10:
         risk = "HIGH"
         explanation = (
-            "The sample readings cross the high-risk "
-            "demo thresholds."
+            "The selected readings exceed the demonstration "
+            "high-risk thresholds."
         )
 
     elif rainfall >= 100 or water >= 7:
         risk = "MEDIUM"
         explanation = (
-            "The sample readings fall in the medium-risk "
-            "demo range."
+            "The selected readings fall within the "
+            "demonstration medium-risk range."
         )
 
     else:
         risk = "LOW"
         explanation = (
-            "The sample readings fall in the low-risk "
-            "demo range."
+            "The selected readings fall within the "
+            "demonstration low-risk range."
         )
 
     st.markdown(
-        '<div class="section-title">🎯 Assessment Result</div>',
+        '<div class="section-heading">Assessment Result</div>',
         unsafe_allow_html=True
     )
 
     st.markdown(f"""
-    <div class="risk-result">
-        <div class="metric-label">SELECTED LOCATION</div>
+    <div class="panel">
+        <div class="small-label">MONITORING LOCATION</div>
         <h2>{location}</h2>
-        {status_badge(risk)}
+        <div class="small-label">DEMO CLASSIFICATION</div>
+        {risk_badge(risk)}
         <p>{explanation}</p>
     </div>
     """, unsafe_allow_html=True)
 
-    # Input summary
-
-    st.markdown("### 📋 Measurement Summary")
+    st.markdown(
+        '<div class="section-heading">Measurement Summary</div>',
+        unsafe_allow_html=True
+    )
 
     c1, c2 = st.columns(2)
 
     with c1:
         metric_card(
-            "Rainfall",
+            "RAINFALL",
             f"{rainfall} mm",
-            "Selected sample reading"
+            "Selected input"
         )
 
     with c2:
         metric_card(
-            "Water Level",
+            "WATER LEVEL",
             f"{water:.1f} m",
-            "Selected sample reading"
+            "Selected input"
         )
 
     st.caption(
-        "Educational prototype only. These simple rules "
-        "are not a validated forecasting model."
+        "This is a basic rule-based demonstration, "
+        "not a validated flood prediction model."
     )
 
 
-# ==============================
+# ==========================================
 # EMERGENCY ALERTS
-# ==============================
+# ==========================================
 
-elif page == "🚨 Emergency Alerts":
+elif page == "Emergency Alerts":
 
-    hero(
-        "🚨 Emergency Alerts",
-        "Example notifications for the project demonstration.",
-        "ALERT CENTRE"
+    page_header(
+        "Emergency Alerts",
+        "Illustrative notifications for monitored locations.",
+        "RESQ AI / ALERT CENTRE"
     )
 
     alerts = [
-        (
-            "HIGH",
-            "River Monitoring Demo",
-            "Sample high-risk condition for demonstration.",
-            "Gomti River Area"
-        ),
-        (
-            "MEDIUM",
-            "Heavy Rainfall Demo",
-            "Sample rainfall condition for demonstration.",
-            "Alambagh"
-        )
+        {
+            "level": "HIGH",
+            "title": "River Monitoring",
+            "location": "Gomti River Area",
+            "message": "Example high-risk notification."
+        },
+        {
+            "level": "MEDIUM",
+            "title": "Rainfall Monitoring",
+            "location": "Alambagh",
+            "message": "Example medium-risk notification."
+        }
     ]
 
-    for level, title, message, place in alerts:
+    for alert in alerts:
 
         st.markdown(f"""
-        <div class="info-card">
-            {status_badge(level)}
-            <h3>{title}</h3>
-            <p>{message}</p>
-            <p>📍 {place}</p>
+        <div class="panel">
+            <div class="small-label">DEMONSTRATION ALERT</div>
+            {risk_badge(alert["level"])}
+            <h3>{alert["title"]}</h3>
+            <p>{alert["message"]}</p>
+            <p><b>Location:</b> {alert["location"]}</p>
         </div>
         """, unsafe_allow_html=True)
 
     st.warning(
-        "These are simulated alerts, not official "
-        "emergency notifications."
+        "These notifications are simulated. "
+        "They are not official emergency warnings."
     )
 
 
-# ==============================
+# ==========================================
 # ABOUT
-# ==============================
+# ==========================================
 
-elif page == "ℹ️ About":
+elif page == "About":
 
-    hero(
-        "ℹ️ About ResQ AI",
-        "Technology supporting disaster awareness and response planning.",
-        "ABOUT THE PROJECT"
+    page_header(
+        "About ResQ AI",
+        "Project information and system overview.",
+        "RESQ AI / INFORMATION"
     )
 
-    st.markdown("### 🎯 Our Mission")
+    st.markdown("### Project Overview")
 
     st.write(
-        "ResQ AI is a student project prototype designed "
-        "to demonstrate how a digital platform could "
-        "present disaster-related information and support "
-        "better response planning."
+        "ResQ AI is a student project prototype that "
+        "demonstrates how a digital disaster-management "
+        "dashboard can organise environmental indicators, "
+        "risk classifications and example emergency alerts."
     )
 
-    st.markdown("### ⚙️ Project Modules")
+    st.markdown("### System Modules")
 
-    st.markdown("""
-    - **Dashboard:** Overview of sample disaster indicators.
-    - **Risk Assessment:** Rule-based demonstration using rainfall and water levels.
-    - **Emergency Alerts:** Example alert notifications.
-    - **Disaster Analytics:** Graphs and risk distribution charts.
-    - **About:** Project purpose and scope.
-    """)
+    modules = [
+        ("Dashboard", "Environmental indicators and data visualisations."),
+        ("Risk Assessment", "Rule-based classification of sample readings."),
+        ("Emergency Alerts", "Illustrative notifications by location."),
+        ("Analytics", "Rainfall, water-level and risk distribution charts.")
+    ]
 
-    st.markdown("### 🛠️ Technology")
+    for title, description in modules:
+        st.markdown(f"""
+        <div class="panel">
+            <b>{title}</b>
+            <p>{description}</p>
+        </div>
+        """, unsafe_allow_html=True)
 
-    st.write(
-        "Python • Streamlit • Custom CSS • Vega-Lite Charts"
-    )
+    st.markdown("### Technology Stack")
+
+    st.write("Python | Streamlit | Pandas | Vega-Lite")
 
     st.info(
-        "ResQ AI is a prototype. It does not connect to "
-        "live sensors, official emergency services, "
-        "or verified shelter databases."
+        "The current version uses static demonstration data. "
+        "It is not connected to live monitoring infrastructure "
+        "or emergency response services."
     )
 
 
-# ==============================
+# ==========================================
 # FOOTER
-# ==============================
+# ==========================================
 
 st.divider()
 
 st.caption(
-    "🌊 ResQ AI | Student Project Prototype | "
-    "For demonstration purposes only"
+    "ResQ AI | Disaster Management Prototype | Version 2.0"
 )
-
